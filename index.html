@@ -1,0 +1,90 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Registro de Tiempos</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: sans-serif; padding: 20px; max-width: 500px; margin: auto; }
+    label { display: block; margin-top: 15px; }
+    input, button { width: 100%; padding: 10px; font-size: 16px; margin-top: 5px; }
+    .start-time { margin-top: 10px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h2>Registro de carga</h2>
+
+  <label for="patente">Patente</label>
+  <input type="text" id="patente" placeholder="Ej: ABC123" required>
+
+  <label for="reparto">Reparto</label>
+  <input type="text" id="reparto" placeholder="Ej: 45678" required>
+
+  <button id="iniciar">Iniciar</button>
+  <div class="start-time" id="horaInicio"></div>
+
+  <button id="finalizar" disabled>Finalizar</button>
+
+  <div id="resultado" style="margin-top: 20px; font-weight: bold; color: red;"></div>
+
+  <script>
+    let horaInicio = null;
+
+    const iniciarBtn = document.getElementById('iniciar');
+    const finalizarBtn = document.getElementById('finalizar');
+    const horaInicioDisplay = document.getElementById('horaInicio');
+    const resultado = document.getElementById('resultado');
+
+    iniciarBtn.onclick = () => {
+      horaInicio = new Date();
+      horaInicioDisplay.textContent = "Hora de inicio: " + horaInicio.toLocaleTimeString();
+      finalizarBtn.disabled = false;
+      iniciarBtn.disabled = true;
+    };
+
+    finalizarBtn.onclick = () => {
+      const horaFin = new Date();
+      const patente = document.getElementById('patente').value;
+      const reparto = document.getElementById('reparto').value;
+
+      if (!patente || !reparto) {
+        alert("Completá la patente y el reparto");
+        return;
+      }
+
+      const datos = {
+        inicio: horaInicio.toISOString(),
+        fin: horaFin.toISOString(),
+        patente: patente,
+        pedido: reparto
+      };
+
+      fetch("https://script.google.com/macros/s/AKfycbwImTtdSeRGJrLOV7jsBKJUrTTgPiqQ7BVD_k3n7MXWO6ID9J41k-KLmLPdCnNoylQ3Yg/exec", {
+        method: "POST",
+        body: JSON.stringify(datos),
+        headers: {
+          "Content-Type": "application/json"
+        }
+      })
+      .then(res => res.text())
+      .then(texto => {
+        if (texto === "OK") {
+          resultado.style.color = "green";
+          resultado.textContent = "Registro guardado con éxito.";
+        } else {
+          resultado.textContent = "Error al guardar: " + texto;
+        }
+        iniciarBtn.disabled = false;
+        finalizarBtn.disabled = true;
+        horaInicioDisplay.textContent = "";
+        document.getElementById('patente').value = "";
+        document.getElementById('reparto').value = "";
+      })
+      .catch(err => {
+        resultado.textContent = "Error de conexión: " + err.message;
+      });
+    };
+  </script>
+</body>
+</html>
